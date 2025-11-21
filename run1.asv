@@ -10,7 +10,7 @@ function trainingWithLabels = LoadAndProcessTraining(trainingDir)
     classNames = {classDirectories.name};
 
     %Everything in matlab is indexed from 1 (sorry)
-    vectorsWithLabels = [];
+    imagesWithLabels = [];
 
     for i = 1:length(classNames)
         currentClassName = classNames{i};
@@ -19,9 +19,15 @@ function trainingWithLabels = LoadAndProcessTraining(trainingDir)
         %fullfile because it handles operating system differences
         currentPath = fullfile(trainingDir, currentClassName);
         imgFiles = dir(currentPath);
+
+        %Debug
+        fprintf("Now doing %s\n", currentClassName)
         
         %Removes non-image image entries
         imgFiles = imgFiles(~ismember({imgFiles.name}, {'.', '..', '.DS_Store'}));
+
+        %Debug
+        firstOfTheClass = true;
 
         %List of all images in this class
         classVectors = [];
@@ -34,15 +40,21 @@ function trainingWithLabels = LoadAndProcessTraining(trainingDir)
 
             %Gets the small image
             smallImage = extractCroppedSizedImage(currentImage, 16);
-            featureVector = flattenImageToVector(smallImage);
+            featureVector = flattenToVector(smallImage);
 
             %Puts images with the rest of this class
-            classVectors = [classVectors, featureVector];
+            classVectors = [classVectors; featureVector];
+
+            %Debug
+            if(firstOfTheClass)
+                imshow(smallImage);
+                firstOfTheClass = false;
+            end
         end
 
-        vectorsWithLabels = [vectorsWithLabels; {classVectors, currentClassName}];
+        imagesWithLabels = [imagesWithLabels; {classVectors, currentClassName}];
     end
-    trainingWithLabels = vectorsWithLabels;
+    trainingWithLabels = imagesWithLabels;
 end
 
 function output = readImage(imagePath)
@@ -65,9 +77,38 @@ function output = extractCroppedSizedImage(image, imageSize)
     output = imresize(squareImage, [imageSize,imageSize]);
 end
 
-function featureVector = flattenImageToVector(image)
-    featureVector = image(:);
+%Flattens the image so that instead of being NxM big it's a (N*M x 1) feature vector 
+function vector = flattenToVector(image)
+    [x,y] = size(image);
+    
+    vector = []
+    sum = 0;
+    for i = 1:x
+        for j = 1:y
+            vector = [vector, image(x,y)]
+            sum = sum + image(x,y);
+        end
+    end
+    
+    mean = (sum / x*y);
+    lengthSum = 0;
+
+    %Zero the mean
+    for i = 1:length(vector)
+        vector(i) = vector(i) - mean;
+
+        lengthSum = lengthSum + vector(i).^2;
+    end
+
+    %Calculates the unit length
+    unitLength = sqrt(lengthSum);
+
+    %Divides each element by the unit length
+    for i = 1:length(vector)
+        vector(i) = vector(i) / unitLength;
+    end
 end
+
 
 % Testing
 trainingDirectory = 'training';
