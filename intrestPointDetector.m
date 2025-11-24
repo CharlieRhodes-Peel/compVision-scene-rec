@@ -37,8 +37,39 @@ function plotPoints(filteredImage, orignalI)
     end
 end
 
+function output = detectCornerEdges(image)
+    image = double(image) / 255; 
+    output = detectHarrisFeatures(image);
+end
+
+function output = detectSIFTfeatures(image)
+    image = double(image) / 255;
+    output = detectSIFTFeatures(image);
+end
+
 %Testing
-file = fullfile("testing", "0.jpg");
+file = fullfile("testing", "1.jpg");
 image = imread(file);
 
-detectInterestPoints(image);
+%detectInterestPoints(image);
+
+points = detectCornerEdges(image);
+
+figure('Name', 'Corner Detection'),
+imshow(image),
+hold on
+plot(points);
+hold off;
+
+points = detectSIFTfeatures(image); 
+
+figure('Name', 'SIFT features'),
+imshow(image),
+hold on
+plot(points);
+hold off;
+
+[features, validPoints] = extractFeatures(image, points);
+
+figure('Name', 'Feature Vector'), imshow(features );
+

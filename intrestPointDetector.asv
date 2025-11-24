@@ -5,14 +5,14 @@ function detectInterestPoints(image)
     image = double(image) / 255; 
     figure('Name', 'Normal Image'), imshow(image, []);
 
-     = histeq(image);
+    equalisedI = histeq(image);
 
-    figure('Name', 'After Histogram eq'), imshow(image, [])
+    figure('Name', 'After Histogram eq'), imshow(equalisedI, [])
 
-    gaussianFilter = imgaussfilt(image);
+    gaussianFilter = imgaussfilt(equalisedI);
     figure('Name', 'Gaussian Filtered Image'), imshow(gaussianFilter, []);
     
-    dog = image - gaussianFilter;
+    dog = equalisedI - gaussianFilter;
 
     figure('Name', 'DoG'), imshow(dog, []);
 
@@ -21,7 +21,6 @@ function detectInterestPoints(image)
     figure('Name', 'Thresholded'), imshow(binaryImage, []);
 
     plotPoints(binaryImage, image);
-
 end
 
 function plotPoints(filteredImage, orignalI)
@@ -38,8 +37,24 @@ function plotPoints(filteredImage, orignalI)
     end
 end
 
+function output = detectCornerEdges(image)
+    image = double(image) / 255; 
+    output = detectHarrisFeatures(image);
+end
+
+function output = detectSIFTfeatures(image)
+    image = double(image) / 255;
+    output = detectSIFTFeatures(image);
+
 %Testing
-file = fullfile("testing", "3.jpg");
+file = fullfile("testing", "0.jpg");
 image = imread(file);
 
-detectInterestPoints(image);
+%detectInterestPoints(image);
+
+points = detectCornerEdges(image);
+
+imshow(image),
+hold on
+plot(points);
+hold off
